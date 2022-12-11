@@ -15,6 +15,7 @@ export const StateContextProvider = ({ children }) => {
   const address = useAddress();
   const connect = useMetamask();
 
+  //publish campaign in blockchain
   const publishCampaign = async (form) => {
     try {
       const data = await createCampaign([
@@ -32,6 +33,22 @@ export const StateContextProvider = ({ children }) => {
     }
   }
 
+  //get campaigns from blockchain
+  const getCampaigns = async ()=>{
+    const campaigns = await contract.call('getCampaigns');
+    const parsedCampaigns = campaigns.map((campaign, i)=>({
+      owner: campaign.owner,
+      title: campaign.title,
+      description: campaign.description,
+      target: ethers.utils.formatEther(campaign.target.toString()),
+      deadline: campaign.deadline.toNumber(),
+      amountCollected: ethers.utils.formatEther(campaign.amountCollected.toString()),
+      image: campaign.image,
+      pId: i
+
+    }))
+    return parsedCampaigns;
+  }
 
 
   return (
@@ -41,6 +58,7 @@ export const StateContextProvider = ({ children }) => {
         contract,
         connect,
         createCampaign: publishCampaign,
+        getCampaigns
       }}
     >
       {children}
