@@ -9,8 +9,13 @@ import { ethers } from "ethers";
 
 const StateContext = createContext();
 export const StateContextProvider = ({ children }) => {
-  const { contract } = useContract('0x7F3f4007D075452141a974dd06b8fdb1161BA0C2');
-  const { mutateAsync: createCampaign } = useContractWrite(contract, 'createCampaign');
+  const { contract } = useContract(
+    "0x7F3f4007D075452141a974dd06b8fdb1161BA0C2"
+  );
+  const { mutateAsync: createCampaign } = useContractWrite(
+    contract,
+    "createCampaign"
+  );
 
   const address = useAddress();
   const connect = useMetamask();
@@ -24,46 +29,56 @@ export const StateContextProvider = ({ children }) => {
         form.description, // description
         form.target,
         new Date(form.deadline).getTime(), // deadline,
-        form.image
-      ])
+        form.image,
+      ]);
 
-      console.log("contract call success", data)
+      console.log("contract call success", data);
     } catch (error) {
-      console.log("contract call failure", error)
+      console.log("contract call failure", error);
     }
-  }
+  };
 
   //get campaigns from blockchain
-  const getCampaigns = async ()=>{
-    const campaigns = await contract.call('getCampaigns');
-    const parsedCampaigns = campaigns.map((campaign, i)=>({
+  const getCampaigns = async () => {
+    const campaigns = await contract.call("getCampaigns");
+    const parsedCampaigns = campaigns.map((campaign, i) => ({
       owner: campaign.owner,
       title: campaign.title,
       description: campaign.description,
       target: ethers.utils.formatEther(campaign.target.toString()),
       deadline: campaign.deadline.toNumber(),
-      amountCollected: ethers.utils.formatEther(campaign.amountCollected.toString()),
+      amountCollected: ethers.utils.formatEther(
+        campaign.amountCollected.toString()
+      ),
       image: campaign.image,
-      pId: i
-
-    }))
+      pId: i,
+    }));
     return parsedCampaigns;
-  }
+  };
 
+  //function to get campaigns made by user
+  const getUserCampaigns = async () => {
+    const allCampaigns = await getCampaigns();
+    const filteredCampaigns = allCampaigns.filter(
+      (campaign) => campaign.owner === address
+    );
+    return filteredCampaigns;
+  };
 
   return (
     <StateContext.Provider
-      value={{ 
+      value={{
         address,
         contract,
         connect,
         createCampaign: publishCampaign,
-        getCampaigns
+        getCampaigns,
+        getUserCampaigns,
       }}
     >
       {children}
     </StateContext.Provider>
-  )
-}
+  );
+};
 
 export const useStateContext = () => useContext(StateContext);
